@@ -69,10 +69,13 @@ loader.load("assets/heightmap.png", function(texture) {
     geometry.computeVertexNormals();
 
 
+    const textureLoader = new THREE.TextureLoader();
+
+    const terrainTexture = textureLoader.load("assets/imagery_texture.png");
+
     const material = new THREE.MeshStandardMaterial({
 
-        color:0x88aa88,
-        wireframe:false
+        map: terrainTexture
 
     });
 
