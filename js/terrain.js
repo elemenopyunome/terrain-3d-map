@@ -1,100 +1,75 @@
+import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { TerrainManager } from "./terrainManager.js";
+
+
 const scene = new THREE.Scene();
 
+scene.background = new THREE.Color(0xbfd1e5);
+
+
 const camera = new THREE.PerspectiveCamera(
-    60,
-    window.innerWidth / window.innerHeight,
-    1,
-    100000
+60,
+window.innerWidth/window.innerHeight,
+1,
+100000
 );
 
-const renderer = new THREE.WebGLRenderer({ antialias: true });
 
-renderer.setSize(window.innerWidth, window.innerHeight);
+const renderer = new THREE.WebGLRenderer({antialias:true});
+
+renderer.setSize(window.innerWidth,window.innerHeight);
 
 document.body.appendChild(renderer.domElement);
 
 
-camera.position.set(0, 300, 500);
+const controls = new OrbitControls(camera,renderer.domElement);
+
+controls.enableDamping = true;
+
+camera.position.set(0,400,600);
 
 
+/* LIGHTING */
 
-const light = new THREE.DirectionalLight(0xffffff, 1);
+const ambient = new THREE.AmbientLight(0xffffff,0.4);
+scene.add(ambient);
 
-light.position.set(200, 400, 200);
+const sun = new THREE.DirectionalLight(0xffffff,1);
 
-scene.add(light);
+sun.position.set(300,500,200);
 
-
-
-const loader = new THREE.TextureLoader();
-
-
-
-loader.load("assets/heightmap.png", function(texture) {
-
-    const img = texture.image;
-
-    const canvas = document.createElement("canvas");
-
-    canvas.width = img.width;
-    canvas.height = img.height;
-
-    const ctx = canvas.getContext("2d");
-
-    ctx.drawImage(img, 0, 0);
-
-    const imgData = ctx.getImageData(0,0,img.width,img.height).data;
+scene.add(sun);
 
 
-    const geometry = new THREE.PlaneGeometry(
-        1000,
-        1000,
-        img.width-1,
-        img.height-1
-    );
+/* TERRAIN */
+
+const terrain = new TerrainManager(scene,camera);
 
 
-    const vertices = geometry.attributes.position.array;
-
-
-    for(let i=0;i<img.width*img.height;i++){
-
-        const height = imgData[i*4] / 255;
-
-        vertices[i*3 + 2] = height * 200;
-
-    }
-
-
-    geometry.computeVertexNormals();
-
-
-    const textureLoader = new THREE.TextureLoader();
-
-    const terrainTexture = textureLoader.load("assets/imagery_texture.png");
-
-    const material = new THREE.MeshStandardMaterial({
-
-        map: terrainTexture
-
-    });
-
-
-    const terrain = new THREE.Mesh(geometry,material);
-
-    terrain.rotation.x = -Math.PI/2;
-
-    scene.add(terrain);
-
-});
-
+/* LOOP */
 
 function animate(){
 
-    requestAnimationFrame(animate);
+requestAnimationFrame(animate);
 
-    renderer.render(scene,camera);
+controls.update();
+
+terrain.update();
+
+renderer.render(scene,camera);
 
 }
 
 animate();
+
+
+window.addEventListener("resize",()=>{
+
+camera.aspect = window.innerWidth/window.innerHeight;
+
+camera.updateProjectionMatrix();
+
+renderer.setSize(window.innerWidth,window.innerHeight);
+
+});
